@@ -1,0 +1,42 @@
+# Build outputs
+/bin/
+/obj/
+/**/bin/
+/**/obj/
+
+# Visual Studio / editor
+.vs/
+.vscode/
+*.user
+*.suo
+
+# NuGet / packages
+*.nupkg
+.nuget/packages/
+packages/
+artifacts/
+
+# Test / coverage / logs
+TestResults/
+coverage/
+*.log
+
+# Secrets and certificates
+local.settings.json
+secrets.json
+*.pfx
+*.p12
+*.key
+*.env
+
+# OS files
+*.DS_Store
+
+# Rider
+.idea/
+
+# Configuration
+**/appsettings.Development.json
+
+
+**/publish/
