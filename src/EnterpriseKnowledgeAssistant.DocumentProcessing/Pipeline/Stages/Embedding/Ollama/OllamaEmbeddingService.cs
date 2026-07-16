@@ -23,27 +23,29 @@ namespace EnterpriseKnowledgeAssistant.DocumentProcessing.Pipeline.Stages.Embedd
         {
             try
             {
-                var request = new OllamaEmbedRequest
-                {
-                    Model = _options.Model,
-                    Input = chunk.Text
-                };
-                var response = await _httpClient.PostAsJsonAsync("api/embed", request, cancellationToken);
-                response.EnsureSuccessStatusCode();
+                //var request = new OllamaEmbedRequest
+                //{
+                //    Model = _options.Model,
+                //    Input = chunk.Text
+                //};
+                //var response = await _httpClient.PostAsJsonAsync("api/embed", request, cancellationToken);
+                //response.EnsureSuccessStatusCode();
 
-                var embeddingResponse = await response.Content.ReadFromJsonAsync<OllamaEmbedResponse>(cancellationToken: cancellationToken);
-                if(embeddingResponse == null || embeddingResponse.Embeddings.Count==0)
-                {
-                    return new EmbeddingResult
-                    {
-                        Success = false,
-                        ErrorMessage = "Failed to get embedding from Ollama API.",
-                        Chunk = chunk
-                    };
-                }
-                chunk.Embedding = new EmbeddingVector { Values = embeddingResponse.Embeddings[0],
-                                                        Model = _options.Model,
-                                                        CreatedAtUtc = DateTime.UtcNow};
+                //var embeddingResponse = await response.Content.ReadFromJsonAsync<OllamaEmbedResponse>(cancellationToken: cancellationToken);
+                //if(embeddingResponse == null || embeddingResponse.Embeddings.Count==0)
+                //{
+                //    return new EmbeddingResult
+                //    {
+                //        Success = false,
+                //        ErrorMessage = "Failed to get embedding from Ollama API.",
+                //        Chunk = chunk
+                //    };
+                //}
+                //chunk.Embedding = new EmbeddingVector { Values = embeddingResponse.Embeddings[0],
+                //                                        Model = _options.Model,
+                //                                        CreatedAtUtc = DateTime.UtcNow};
+
+                chunk.Embedding = await GenerateEmbeddingAsync(chunk.Text, cancellationToken);
                 return new EmbeddingResult
                 {
                     Success = true,
@@ -70,6 +72,45 @@ namespace EnterpriseKnowledgeAssistant.DocumentProcessing.Pipeline.Stages.Embedd
                 results.Add(result);
             }
             return results;
+        }
+
+        public async Task<EmbeddingVector> GenerateEmbeddingAsync(
+    string text,
+    CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                throw new ArgumentException("Text cannot be empty.", nameof(text));
+
+            var request = new OllamaEmbedRequest
+            {
+                Model = _options.Model,
+                Input = text
+            };
+
+            using var response = await _httpClient.PostAsJsonAsync(
+                "api/embed",
+                request,
+                cancellationToken);
+
+            response.EnsureSuccessStatusCode();
+
+            var embeddingResponse =
+                await response.Content.ReadFromJsonAsync<OllamaEmbedResponse>(
+                    cancellationToken: cancellationToken);
+
+            if (embeddingResponse is null ||
+                embeddingResponse.Embeddings.Count == 0)
+            {
+                throw new InvalidOperationException(
+                    "Ollama did not return an embedding.");
+            }
+
+            return new EmbeddingVector
+            {
+                Values = embeddingResponse.Embeddings[0],
+                Model = _options.Model,
+                CreatedAtUtc = DateTime.UtcNow
+            };
         }
     }
 }

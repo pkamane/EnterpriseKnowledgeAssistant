@@ -92,5 +92,26 @@ namespace EnterpriseKnowledgeAssistant.DocumentProcessing.Pipeline.Stages.Embedd
 
             return results;
         }
+
+        public async Task<EmbeddingVector> GenerateEmbeddingAsync(
+    string text,
+    CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                throw new ArgumentException("Text cannot be empty.", nameof(text));
+
+            var response = await _client.GenerateEmbeddingAsync(
+                text,
+                cancellationToken: cancellationToken);
+
+            var embedding = response.Value;
+
+            return new EmbeddingVector
+            {
+                Values = embedding.ToFloats().ToArray(),
+                Model = _options.Model,
+                CreatedAtUtc = DateTime.UtcNow
+            };
+        }
     }
 }

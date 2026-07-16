@@ -10,5 +10,8 @@ namespace EnterpriseKnowledgeAssistant.DocumentProcessing.Pipeline.Stages.Embedd
          
         Task<IReadOnlyList<EmbeddingResult>> GenerateEmbeddingsAsync(
                                                 IEnumerable<DocumentChunk> chunks, CancellationToken cancellationToken);
+    
+        Task<EmbeddingVector> GenerateEmbeddingAsync(string text, CancellationToken cancellationToken);
+
     }
 }

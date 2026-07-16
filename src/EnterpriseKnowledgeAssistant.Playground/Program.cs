@@ -5,6 +5,7 @@ using EnterpriseKnowledgeAssistant.DocumentProcessing.Pipeline.Stages.Embedding.
 using EnterpriseKnowledgeAssistant.DocumentProcessing.Pipeline.Stages.Embedding.Ollama;
 using EnterpriseKnowledgeAssistant.DocumentProcessing.Pipeline.Stages.Embedding.OpenAI;
 using EnterpriseKnowledgeAssistant.DocumentProcessing.Pipeline.Stages.Extraction;
+using EnterpriseKnowledgeAssistant.DocumentProcessing.Pipeline.Stages.Retrieval;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.IO;
@@ -162,8 +163,10 @@ var ollamaOptions = configuration
 IEmbeddingService embeddingService =
     new OllamaEmbeddingService(httpClient, ollamaOptions);
 
-var embeddingResults =
-    await embeddingService.GenerateEmbeddingsAsync(chunkingResult.Chunks.Take(10), CancellationToken.None);
+var chunksToIndex = chunkingResult.Chunks.Take(100).ToList();
+
+//var embeddingResults = await embeddingService.GenerateEmbeddingsAsync(chunkingResult.Chunks.Take(100), CancellationToken.None);
+var embeddingResults = await embeddingService.GenerateEmbeddingsAsync(chunksToIndex, CancellationToken.None);
 
 Console.WriteLine();
 Console.WriteLine("========== EMBEDDING RESULTS ==========");
@@ -204,5 +207,30 @@ foreach (var result in embeddingResults)
         }
     }
     Console.WriteLine("--------------------------------------------");
+
+    
+}
+
+// Asking a question
+string question = "What algorithm?";
+EmbeddingVector embeddingVector = await embeddingService.GenerateEmbeddingAsync(question, CancellationToken.None);
+
+IVectorStore vectorStore = new InMemoryVectorStore();
+await vectorStore.AddRangeAsync(chunksToIndex, CancellationToken.None);
+var searchResult = await vectorStore.SearchAsync(embeddingVector.Values, 3, CancellationToken.None);
+
+foreach (var search in searchResult)
+{
+    Console.WriteLine(new string('-', 80));
+
+    Console.WriteLine($"Score : {search.SimilarityScope:F4}");
+
+    Console.WriteLine($"Chunk : {search.Chunk.RelativeId}");
+
+    Console.WriteLine();
+
+    Console.WriteLine(search.Chunk.Text);
+
+    Console.WriteLine();
 }
 Console.ReadLine();
