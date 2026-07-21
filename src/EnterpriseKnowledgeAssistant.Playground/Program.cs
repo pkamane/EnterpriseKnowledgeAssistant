@@ -1,4 +1,6 @@
 ﻿using EnterpriseKnowledgeAssistant.DocumentProcessing.Models.Document;
+using EnterpriseKnowledgeAssistant.DocumentProcessing.Pipeline.Stages.Chat.Models;
+using EnterpriseKnowledgeAssistant.DocumentProcessing.Pipeline.Stages.Chat.PromptBuilder;
 using EnterpriseKnowledgeAssistant.DocumentProcessing.Pipeline.Stages.Chunking;
 using EnterpriseKnowledgeAssistant.DocumentProcessing.Pipeline.Stages.Embedding;
 using EnterpriseKnowledgeAssistant.DocumentProcessing.Pipeline.Stages.Embedding.Contracts;
@@ -233,4 +235,16 @@ foreach (var search in searchResult)
 
     Console.WriteLine();
 }
+
+var promptBuilder = new DefaultPromptBuilder();
+
+var prompt = promptBuilder.BuildPrompt(
+    new PromptContext
+    {
+        Question = question,
+        SearchResults = searchResult
+    });
+
+Console.WriteLine(prompt);
+
 Console.ReadLine();
