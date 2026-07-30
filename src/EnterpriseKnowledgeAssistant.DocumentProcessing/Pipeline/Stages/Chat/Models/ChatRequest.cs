@@ -4,7 +4,8 @@ using System.Text;
 
 namespace EnterpriseKnowledgeAssistant.DocumentProcessing.Pipeline.Stages.Chat.Models
 {
-    internal class ChatRequest
+    public class ChatRequest
     {
+        public string Prompt { get; init; } = string.Empty;
     }
 }

@@ -1,5 +1,7 @@
 ﻿using EnterpriseKnowledgeAssistant.DocumentProcessing.Models.Document;
+using EnterpriseKnowledgeAssistant.DocumentProcessing.Pipeline.Stages.Chat;
 using EnterpriseKnowledgeAssistant.DocumentProcessing.Pipeline.Stages.Chat.Models;
+using EnterpriseKnowledgeAssistant.DocumentProcessing.Pipeline.Stages.Chat.Options;
 using EnterpriseKnowledgeAssistant.DocumentProcessing.Pipeline.Stages.Chat.PromptBuilder;
 using EnterpriseKnowledgeAssistant.DocumentProcessing.Pipeline.Stages.Chunking;
 using EnterpriseKnowledgeAssistant.DocumentProcessing.Pipeline.Stages.Embedding;
@@ -12,7 +14,9 @@ using Microsoft.Extensions.Configuration;
 using System;
 using System.IO;
 
-var env = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "production";
+var env = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT")
+    ?? Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
+    ?? "Production";
 
 var configuration = new ConfigurationBuilder()
     .SetBasePath(AppContext.BaseDirectory)
@@ -246,5 +250,19 @@ var prompt = promptBuilder.BuildPrompt(
     });
 
 Console.WriteLine(prompt);
+
+var chatOptions = configuration.GetSection("OllamaChat").Get<OllamaChatOptions>()
+    ?? throw new InvalidOperationException("Missing 'OllamaChat' configuration section.");
+
+var chatService = new OllamaChatService(httpClient, chatOptions);
+
+var response = await chatService.GenerateResponseAsync(
+    new ChatRequest
+    {
+        Prompt = prompt
+    },
+    CancellationToken.None);
+
+Console.WriteLine(response.Response);
 
 Console.ReadLine();
