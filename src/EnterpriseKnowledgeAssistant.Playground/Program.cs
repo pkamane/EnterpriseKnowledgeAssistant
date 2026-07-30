@@ -218,7 +218,17 @@ foreach (var result in embeddingResults)
 }
 
 // Asking a question
-string question = "What algorithm?";
+Console.WriteLine();
+Console.Write("Enter your question: ");
+string? questionInput = Console.ReadLine();
+
+if (string.IsNullOrWhiteSpace(questionInput))
+{
+    Console.WriteLine("No question entered.");
+    return;
+}
+
+string question = questionInput.Trim();
 EmbeddingVector embeddingVector = await embeddingService.GenerateEmbeddingAsync(question, CancellationToken.None);
 
 IVectorStore vectorStore = new InMemoryVectorStore();
